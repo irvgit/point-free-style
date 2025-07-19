@@ -889,7 +889,6 @@ namespace pfs {
             using m_base_t = combinator_base<all_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -953,7 +952,6 @@ namespace pfs {
             using m_base_t = combinator_base<piecewise_all_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -1012,12 +1010,101 @@ namespace pfs {
 
     namespace detail {
         template <class... tp_elements_ts>
+        struct cartesian_all_combinator : combinator_base<cartesian_all_combinator<tp_elements_ts...>> {
+        private:
+            using m_base_t = combinator_base<cartesian_all_combinator<tp_elements_ts...>>;
+
+            template <
+                typename       tp_self_t,
+                typename       tp_argument_t,
+                std::size_t... tp_is
+            >
+            auto constexpr invoke_each_element_with(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_t&&     p_argument
+            )
+            noexcept(noexcept(
+                (... && invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::declval<tp_self_t>())),
+                    std::declval<tp_argument_t>()
+                ))
+            ))
+            -> decltype(
+                (... && invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ))
+            ) {
+                return (... && invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ));
+            }
+            template <
+                typename       tp_self_t,
+                class...       tp_argument_ts,
+                std::size_t... tp_is
+            >
+            auto constexpr impl(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                (... && std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_argument_ts>()
+                ))
+            ))
+            -> decltype(
+                (... && std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ))
+            ) {
+                return (... && std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ));
+            }
+        public:
+            template <
+                typename tp_self_t,
+                class... tp_parameter_ts
+            >
+            auto constexpr operator()(
+                this tp_self_t&&     p_self,
+                tp_parameter_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                std::declval<tp_self_t>().impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_parameter_ts>()...
+                )
+            ))
+            -> decltype(
+                std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                )
+            ) {
+                return std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                );
+            }
+        };
+    }
+    auto constexpr cartesian_all = detail::adaptor_for<detail::cartesian_all_combinator>{};
+
+    namespace detail {
+        template <class... tp_elements_ts>
         struct any_combinator : combinator_base<any_combinator<tp_elements_ts...>> {
         private:
             using m_base_t = combinator_base<any_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -1081,7 +1168,6 @@ namespace pfs {
             using m_base_t = combinator_base<piecewise_any_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -1140,12 +1226,101 @@ namespace pfs {
     
     namespace detail {
         template <class... tp_elements_ts>
+        struct cartesian_any_combinator : combinator_base<cartesian_any_combinator<tp_elements_ts...>> {
+        private:
+            using m_base_t = combinator_base<cartesian_any_combinator<tp_elements_ts...>>;
+
+            template <
+                typename       tp_self_t,
+                typename       tp_argument_t,
+                std::size_t... tp_is
+            >
+            auto constexpr invoke_each_element_with(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_t&&     p_argument
+            )
+            noexcept(noexcept(
+                (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::declval<tp_self_t>())),
+                    std::declval<tp_argument_t>()
+                ))
+            ))
+            -> decltype(
+                (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ))
+            ) {
+                return (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ));
+            }
+            template <
+                typename       tp_self_t,
+                class...       tp_argument_ts,
+                std::size_t... tp_is
+            >
+            auto constexpr impl(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                (... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_argument_ts>()
+                ))
+            ))
+            -> decltype(
+                (... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ))
+            ) {
+                return (... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ));
+            }
+        public:
+            template <
+                typename tp_self_t,
+                class... tp_parameter_ts
+            >
+            auto constexpr operator()(
+                this tp_self_t&&     p_self,
+                tp_parameter_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                std::declval<tp_self_t>().impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_parameter_ts>()...
+                )
+            ))
+            -> decltype(
+                std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                )
+            ) {
+                return std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                );
+            }
+        };
+    }
+    auto constexpr cartesian_any = detail::adaptor_for<detail::cartesian_any_combinator>{};
+
+    namespace detail {
+        template <class... tp_elements_ts>
         struct none_combinator : combinator_base<none_combinator<tp_elements_ts...>> {
         private:
             using m_base_t = combinator_base<none_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -1209,7 +1384,6 @@ namespace pfs {
             using m_base_t = combinator_base<piecewise_none_combinator<tp_elements_ts...>>;
 
             template <
-                std::size_t    tp_index = 0,
                 typename       tp_self_t,
                 class...       tp_argument_ts,
                 std::size_t... tp_is
@@ -1265,6 +1439,96 @@ namespace pfs {
         };
     }
     auto constexpr piecewise_none = detail::adaptor_for<detail::piecewise_none_combinator>{};
+
+    namespace detail {
+        template <class... tp_elements_ts>
+        struct cartesian_none_combinator : combinator_base<cartesian_none_combinator<tp_elements_ts...>> {
+        private:
+            using m_base_t = combinator_base<cartesian_none_combinator<tp_elements_ts...>>;
+
+            template <
+                typename       tp_self_t,
+                typename       tp_argument_t,
+                std::size_t... tp_is
+            >
+            auto constexpr invoke_each_element_with(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_t&&     p_argument
+            )
+            noexcept(noexcept(
+                (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::declval<tp_self_t>())),
+                    std::declval<tp_argument_t>()
+                ))
+            ))
+            -> decltype(
+                (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ))
+            ) {
+                return (... || invoke_or_compare(
+                    forward_like_if_invocable<tp_self_t>(adl_exposed::get<tp_is>(std::forward<tp_self_t>(p_self))),
+                    std::forward<tp_argument_t>(p_argument)
+                ));
+            }
+            template <
+                typename       tp_self_t,
+                class...       tp_argument_ts,
+                std::size_t... tp_is
+            >
+            auto constexpr impl(
+                this tp_self_t&&    p_self,
+                std::index_sequence<tp_is...>,
+                tp_argument_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                !(... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_argument_ts>()
+                ))
+            ))
+            -> decltype(
+                !(... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ))
+            ) {
+                return !(... || std::forward<tp_self_t>(p_self).invoke_each_element_with(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_argument_ts>(p_arguments)
+                ));
+            }
+        public:
+            template <
+                typename tp_self_t,
+                class... tp_parameter_ts
+            >
+            auto constexpr operator()(
+                this tp_self_t&&     p_self,
+                tp_parameter_ts&&... p_arguments
+            )
+            noexcept(noexcept(
+                std::declval<tp_self_t>().impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::declval<tp_parameter_ts>()...
+                )
+            ))
+            -> decltype(
+                std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                )
+            ) {
+                return std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<m_base_t::m_size>{},
+                    std::forward<tp_parameter_ts>(p_arguments)...
+                );
+            }
+        };
+    }
+    auto constexpr cartesian_none = detail::adaptor_for<detail::cartesian_none_combinator>{};
 
     namespace detail {
         template <class... tp_elements_ts>
