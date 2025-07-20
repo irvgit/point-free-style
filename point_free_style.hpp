@@ -1734,22 +1734,22 @@ namespace pfs {
             )
             const noexcept(noexcept(
                 typename combinator_traits<tp_combinator_t>::template m_template_tp<
-                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % tp_count>...
                 >{
-                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::declval<tp_combinator_t>())...,
+                    get_possibly_reference_wrapped_impl<tp_is % tp_count>(std::declval<tp_combinator_t>())...,
                 }
             ))
             -> decltype(
                 typename combinator_traits<tp_combinator_t>::template m_template_tp<
-                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % tp_count>...
                 >{
-                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::forward<tp_combinator_t>(p_combinator))...,
+                    get_possibly_reference_wrapped_impl<tp_is % tp_count>(std::forward<tp_combinator_t>(p_combinator))...,
                 }
             ){
                 return typename combinator_traits<tp_combinator_t>::template m_template_tp<
-                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % tp_count>...
                 >{
-                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::forward<tp_combinator_t>(p_combinator))...,
+                    get_possibly_reference_wrapped_impl<tp_is % tp_count>(std::forward<tp_combinator_t>(p_combinator))...,
                 };
             }
             template <
