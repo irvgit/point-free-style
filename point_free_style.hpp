@@ -1661,6 +1661,65 @@ namespace pfs {
         };
     }
     auto constexpr bind_back = detail::bind_back_modifier{};
+
+    namespace detail {
+        struct reverse_modifier : modifier_closure_base<reverse_modifier> {
+            template <
+                combinator     tp_combinator_t,
+                std::size_t... tp_is
+            >
+            auto constexpr impl[[nodiscard]](
+                std::index_sequence<tp_is...>,
+                tp_combinator_t&& p_combinator
+            )
+            const noexcept(noexcept(
+                typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<sizeof...(tp_is) - 1 - tp_is>...
+                >{
+                    get_possibly_reference_wrapped_impl<sizeof...(tp_is) - 1 - tp_is>(std::declval<tp_combinator_t>())...,
+                }
+            ))
+            -> decltype(
+                typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<sizeof...(tp_is) - 1 - tp_is>...
+                >{
+                    get_possibly_reference_wrapped_impl<sizeof...(tp_is) - 1 - tp_is>(std::forward<tp_combinator_t>(p_combinator))...,
+                }
+            ){
+                return typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<sizeof...(tp_is) - 1 - tp_is>...
+                >{
+                    get_possibly_reference_wrapped_impl<sizeof...(tp_is) - 1 - tp_is>(std::forward<tp_combinator_t>(p_combinator))...,
+                };
+            }
+            template <
+                typename   tp_self_t,
+                combinator tp_combinator_t
+            >
+            auto constexpr operator()[[nodiscard]](
+                this tp_self_t    p_self,
+                tp_combinator_t&& p_combinator
+            )
+            noexcept(noexcept(
+                std::declval<tp_self_t>().impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size>{},
+                    std::declval<tp_combinator_t>()
+                )
+            ))
+            -> decltype(
+                std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size>{},
+                    std::forward<tp_combinator_t>(p_combinator)
+                )
+            ) {
+                return std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size>{},
+                    std::forward<tp_combinator_t>(p_combinator)
+                );
+            }
+        };
+    }
+    auto constexpr reverse = detail::reverse_modifier{};
 }
 
 template <
@@ -1737,7 +1796,7 @@ requires (
         tp_combinator_t
     >
 )
-auto constexpr operator+=[[nodiscard]] (
+auto constexpr operator|=[[nodiscard]] (
     tp_combinator_t&&        p_combinator,
     tp_modifier_closure_t&&  p_modifier_closure
 )
