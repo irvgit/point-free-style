@@ -1720,6 +1720,67 @@ namespace pfs {
         };
     }
     auto constexpr reverse = detail::reverse_modifier{};
+
+    namespace detail {
+        template <std::size_t tp_count>
+        struct repeat_modifier : modifier_closure_base<repeat_modifier<tp_count>> {
+            template <
+                combinator     tp_combinator_t,
+                std::size_t... tp_is
+            >
+            auto constexpr impl[[nodiscard]](
+                std::index_sequence<tp_is...>,
+                tp_combinator_t&& p_combinator
+            )
+            const noexcept(noexcept(
+                typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                >{
+                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::declval<tp_combinator_t>())...,
+                }
+            ))
+            -> decltype(
+                typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                >{
+                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::forward<tp_combinator_t>(p_combinator))...,
+                }
+            ){
+                return typename combinator_traits<tp_combinator_t>::template m_template_tp<
+                    typename combinator_traits<tp_combinator_t>::template m_possibly_reference_wrapped_element_t<tp_is % 3>...
+                >{
+                    get_possibly_reference_wrapped_impl<tp_is % 3>(std::forward<tp_combinator_t>(p_combinator))...,
+                };
+            }
+            template <
+                typename   tp_self_t,
+                combinator tp_combinator_t
+            >
+            auto constexpr operator()[[nodiscard]](
+                this tp_self_t    p_self,
+                tp_combinator_t&& p_combinator
+            )
+            noexcept(noexcept(
+                std::declval<tp_self_t>().impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size * tp_count>{},
+                    std::declval<tp_combinator_t>()
+                )
+            ))
+            -> decltype(
+                std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size * tp_count>{},
+                    std::forward<tp_combinator_t>(p_combinator)
+                )
+            ) {
+                return std::forward<tp_self_t>(p_self).impl(
+                    std::make_index_sequence<combinator_traits<tp_combinator_t>::m_size * tp_count>{},
+                    std::forward<tp_combinator_t>(p_combinator)
+                );
+            }
+        };
+    }
+    template <std::size_t tp_count>
+    auto constexpr repeat = detail::repeat_modifier<tp_count>{};
 }
 
 template <
