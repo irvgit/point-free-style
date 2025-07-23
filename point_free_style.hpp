@@ -361,15 +361,15 @@ namespace pfs {
         };
 
         template <
-            modifier_closure tp_left_modifier_closure,
-            modifier_closure tp_right_modifier_closure
+            adaptor_or_modifier_closure tp_left_adaptor_or_modifier_closure_t,
+            adaptor_or_modifier_closure tp_right_adaptor_or_modifier_closure_t
         >
-        struct pipe_modifier : modifier_closure_base<pipe_modifier<
-            tp_left_modifier_closure,
-            tp_right_modifier_closure
+        struct pipe : modifier_closure_base<pipe<
+            tp_left_adaptor_or_modifier_closure_t,
+            tp_right_adaptor_or_modifier_closure_t
         >> {
-            [[no_unique_address]] tp_left_modifier_closure  m_left_modifier_closure;
-            [[no_unique_address]] tp_right_modifier_closure m_right_modifier_closure;
+            [[no_unique_address]] tp_left_adaptor_or_modifier_closure_t  m_left;
+            [[no_unique_address]] tp_right_adaptor_or_modifier_closure_t m_right;
 
             template <
                 combinator tp_combinator_t,
@@ -381,26 +381,26 @@ namespace pfs {
             )
             noexcept(noexcept(
                 std::invoke(
-                    std::declval<tp_self_t>().m_left_modifier_closure,
+                    std::declval<tp_self_t>().m_right,
                     std::invoke(
-                        std::declval<tp_self_t>().m_right_modifier_closure,
+                        std::declval<tp_self_t>().m_left,
                         std::declval<tp_combinator_t>()
                     )
                 )
             ))
             -> decltype(
                 std::invoke(
-                    std::forward<tp_self_t>(p_self).m_left_modifier_closure,
+                    std::forward<tp_self_t>(p_self).m_right,
                     std::invoke(
-                        std::forward<tp_self_t>(p_self).m_right_modifier_closure,
+                        std::forward<tp_self_t>(p_self).m_left,
                         std::forward<tp_combinator_t>(p_combinator)
                     )
                 )
             ) {
                 return std::invoke(
-                    std::forward<tp_self_t>(p_self).m_left_modifier_closure,
+                    std::forward<tp_self_t>(p_self).m_right,
                     std::invoke(
-                        std::forward<tp_self_t>(p_self).m_right_modifier_closure,
+                        std::forward<tp_self_t>(p_self).m_left,
                         std::forward<tp_combinator_t>(p_combinator)
                     )
                 );
@@ -3142,6 +3142,7 @@ template <
     typename             tp_element_t
 >
 requires (
+    !pfs::detail::adaptor<tp_element_t> &&
     std::invocable<
         tp_adaptor_t,
         tp_element_t
@@ -3234,40 +3235,46 @@ noexcept(noexcept(
 }
 
 template <
-    pfs::detail::modifier_closure tp_modifier_closure1_t,
-    pfs::detail::modifier_closure tp_modifier_closure2_t
+    typename tp_adaptor_or_modifier_closure1_t,
+    typename tp_adaptor_or_modifier_closure2_t
 >
+requires (
+    pfs::detail::adaptor<tp_adaptor_or_modifier_closure1_t> &&
+    pfs::detail::adaptor<tp_adaptor_or_modifier_closure2_t> ||
+    pfs::detail::modifier_closure<tp_adaptor_or_modifier_closure1_t> &&
+    pfs::detail::modifier_closure<tp_adaptor_or_modifier_closure2_t>
+)
 auto constexpr operator|[[nodiscard]] (
-    tp_modifier_closure1_t&& p_modifier_closure1,
-    tp_modifier_closure2_t&& p_modifier_closure2
+    tp_adaptor_or_modifier_closure1_t&& p_modifier_closure1,
+    tp_adaptor_or_modifier_closure2_t&& p_modifier_closure2
 )
 noexcept(noexcept(
-    pfs::detail::pipe_modifier<
-        std::remove_cvref_t<tp_modifier_closure1_t>,
-        std::remove_cvref_t<tp_modifier_closure2_t>
+    pfs::detail::pipe<
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure1_t>,
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure2_t>
     >{
         {},
-        std::declval<tp_modifier_closure1_t>(),
-        std::declval<tp_modifier_closure2_t>()
+        std::declval<tp_adaptor_or_modifier_closure1_t>(),
+        std::declval<tp_adaptor_or_modifier_closure2_t>()
     }
 ))
 -> decltype(
-    pfs::detail::pipe_modifier<
-        std::remove_cvref_t<tp_modifier_closure1_t>,
-        std::remove_cvref_t<tp_modifier_closure2_t>
+    pfs::detail::pipe<
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure1_t>,
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure2_t>
     >{
         {},
-        std::forward<tp_modifier_closure1_t>(p_modifier_closure1),
-        std::forward<tp_modifier_closure2_t>(p_modifier_closure2)
+        std::forward<tp_adaptor_or_modifier_closure1_t>(p_modifier_closure1),
+        std::forward<tp_adaptor_or_modifier_closure2_t>(p_modifier_closure2)
     }
 ) {
-    return pfs::detail::pipe_modifier<
-        std::remove_cvref_t<tp_modifier_closure1_t>,
-        std::remove_cvref_t<tp_modifier_closure2_t>
+    return pfs::detail::pipe<
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure1_t>,
+        std::remove_cvref_t<tp_adaptor_or_modifier_closure2_t>
     >{
         {},
-        std::forward<tp_modifier_closure1_t>(p_modifier_closure1),
-        std::forward<tp_modifier_closure2_t>(p_modifier_closure2)
+        std::forward<tp_adaptor_or_modifier_closure1_t>(p_modifier_closure1),
+        std::forward<tp_adaptor_or_modifier_closure2_t>(p_modifier_closure2)
     };
 }
 
