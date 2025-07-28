@@ -121,7 +121,7 @@ namespace pfs {
         template <class... tp_types_ts>
         struct storage : storage_impl<0, tp_types_ts...> {
         protected:
-            auto constexpr static m_size = sizeof...(tp_types_ts);
+            auto constexpr static m_size      = sizeof...(tp_types_ts);
             auto constexpr static m_is_owning = !(... && is_reference_wrapper<std::remove_cvref_t<tp_types_ts>>::value);
         private:
             template <std::size_t tp_index>
@@ -188,18 +188,8 @@ namespace pfs {
 
             template <std::size_t tp_index>
             friend struct get_possibly_reference_wrapped_impl_fn;
-
-        private:
-            using m_base_t = storage<std::remove_cvref_t<tp_elements_outer_ts>...>;
+            
         protected:
-            using m_base_t::m_size;
-            using m_base_t::m_is_owning;
-
-            using m_base_t::get_possibly_reference_wrapped;
-            using m_base_t::get;
-            using m_base_t::m_element_t;
-            using m_base_t::m_possibly_reference_wrapped_element_t;
-
             template <class... tp_elements_inner_ts>
             using m_template_tp = tp_derived_template_tp<tp_elements_inner_ts...>;
         };
@@ -225,12 +215,12 @@ namespace pfs {
 
         template <std::size_t tp_index>
         struct get_impl_fn {
-            template <typename tp_combinator_t>
-            auto constexpr operator()(tp_combinator_t&& p_combinator)
+            template <typename tp_getable_t>
+            auto constexpr operator()(tp_getable_t&& p_argument)
             const
-            noexcept(noexcept(std::forward<tp_combinator_t>(p_combinator).template get<tp_index>()))
-            -> decltype(std::forward<tp_combinator_t>(p_combinator).template get<tp_index>()) {
-                return std::forward<tp_combinator_t>(p_combinator).template get<tp_index>();
+            noexcept(noexcept(std::forward<tp_getable_t>(p_argument).template get<tp_index>()))
+            -> decltype(std::forward<tp_getable_t>(p_argument).template get<tp_index>()) {
+                return std::forward<tp_getable_t>(p_argument).template get<tp_index>();
             }
         };
         template <std::size_t tp_index>
@@ -238,12 +228,12 @@ namespace pfs {
 
         template <std::size_t tp_index>
         struct get_possibly_reference_wrapped_impl_fn {
-            template <typename tp_combinator_t>
-            auto constexpr operator()(tp_combinator_t&& p_combinator)
+            template <typename tp_getable_t>
+            auto constexpr operator()(tp_getable_t&& p_argument)
             const
-            noexcept(noexcept(std::forward<tp_combinator_t>(p_combinator).template get_possibly_reference_wrapped<tp_index>()))
-            -> decltype(std::forward<tp_combinator_t>(p_combinator).template get_possibly_reference_wrapped<tp_index>()) {
-                return std::forward<tp_combinator_t>(p_combinator).template get_possibly_reference_wrapped<tp_index>();
+            noexcept(noexcept(std::forward<tp_getable_t>(p_argument).template get_possibly_reference_wrapped<tp_index>()))
+            -> decltype(std::forward<tp_getable_t>(p_argument).template get_possibly_reference_wrapped<tp_index>()) {
+                return std::forward<tp_getable_t>(p_argument).template get_possibly_reference_wrapped<tp_index>();
             }
         };
         template <std::size_t tp_index>
