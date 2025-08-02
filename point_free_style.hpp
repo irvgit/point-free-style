@@ -1547,7 +1547,7 @@ namespace pfs {
                 )
             ))
             -> decltype(
-                invoke_or_compare(
+                !invoke_or_compare(
                     forward_like_if_invocable<tp_self_t>(adl_exposed::get<0>(std::forward<tp_self_t>(p_self))),
                     std::forward<tp_parameter_ts>(p_arguments)...
                 )
@@ -3136,7 +3136,8 @@ requires (
     std::invocable<
         tp_adaptor_t,
         tp_element_t
-    >
+    > &&
+    !pfs::detail::modifier_closure<tp_element_t>
 )
 auto constexpr operator|[[nodiscard]] (
     tp_adaptor_t&& p_adaptor,
@@ -3225,15 +3226,9 @@ noexcept(noexcept(
 }
 
 template <
-    typename tp_adaptor_or_modifier_closure1_t,
-    typename tp_adaptor_or_modifier_closure2_t
+    pfs::detail::adaptor_or_modifier_closure tp_adaptor_or_modifier_closure1_t,
+    pfs::detail::adaptor_or_modifier_closure tp_adaptor_or_modifier_closure2_t
 >
-requires (
-    pfs::detail::adaptor<tp_adaptor_or_modifier_closure1_t> &&
-    pfs::detail::adaptor<tp_adaptor_or_modifier_closure2_t> ||
-    pfs::detail::modifier_closure<tp_adaptor_or_modifier_closure1_t> &&
-    pfs::detail::modifier_closure<tp_adaptor_or_modifier_closure2_t>
-)
 auto constexpr operator|[[nodiscard]] (
     tp_adaptor_or_modifier_closure1_t&& p_modifier_closure1,
     tp_adaptor_or_modifier_closure2_t&& p_modifier_closure2
@@ -3266,38 +3261,6 @@ noexcept(noexcept(
         std::forward<tp_adaptor_or_modifier_closure1_t>(p_modifier_closure1),
         std::forward<tp_adaptor_or_modifier_closure2_t>(p_modifier_closure2)
     };
-}
-
-template <
-    pfs::detail::combinator tp_combinator1_t,
-    pfs::detail::combinator tp_combinator2_t
->
-auto constexpr operator|[[nodiscard]] (
-    tp_combinator1_t&& p_combinator1,
-    tp_combinator2_t&& p_combinator2
-)
-noexcept(noexcept(
-    pfs::detail::merge_combinators(
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator1_t>::m_size>{},
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator2_t>::m_size>{},
-        std::declval<tp_combinator1_t>(),
-        std::declval<tp_combinator2_t>()
-    )
-))
--> decltype(
-    pfs::detail::merge_combinators(
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator1_t>::m_size>{},
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator2_t>::m_size>{},
-        std::forward<tp_combinator1_t>(p_combinator1),
-        std::forward<tp_combinator2_t>(p_combinator2)
-    )
-) {
-    return pfs::detail::merge_combinators(
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator1_t>::m_size>{},
-        std::make_index_sequence<pfs::detail::combinator_traits<tp_combinator2_t>::m_size>{},
-        std::forward<tp_combinator1_t>(p_combinator1),
-        std::forward<tp_combinator2_t>(p_combinator2)
-    );
 }
 
 template <
